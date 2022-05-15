@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use thiserror::Error;
 
 #[derive(Debug)]
 struct Record {
@@ -22,6 +23,16 @@ impl Records {
     fn add(&mut self, record: Record) {
         self.inner.insert(record.id, record)
     }
+}
+
+#[derive(Error, Debug)]
+enum ParserError {
+    #[error("id must be a number: {0}")]
+    InvalidId(#[from] std::num::ParseIntError)
+    #[error("empty record")]
+    Emptyrecord,
+    #[error("missing field: {0}")]
+    MissingField(String)
 }
 
 
