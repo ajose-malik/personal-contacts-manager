@@ -35,6 +35,27 @@ enum ParserError {
     MissingField(String)
 }
 
+fn parse_records(records: String, verbose: bool) -> Records {
+    let mut recs = Records::new();
+    for (num, record) in records.split('\n').enumerate() {
+        if record != "" {
+            match parse_record(record) {
+                Ok(rec) => recs.add(rec),
+                Err(e) => {
+                    if verbose {
+                        println!(
+                            "error on line number {}:  {}\n  > \"{}\"\n",
+                            num + 1,
+                            e,
+                            record
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn load_records(file_name: PathBuf, verbose; bool) -> std::io::Result<Records> {
     let mut file = File::open(file_name)?;
 
