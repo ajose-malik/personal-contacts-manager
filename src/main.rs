@@ -35,6 +35,16 @@ enum ParserError {
     MissingField(String)
 }
 
+fn load_records(file_name: PathBuf, verbose; bool) -> std::io::Result<Records> {
+    let mut file = File::open(file_name)?;
+
+    let mut buffer = String::new();
+    file.read_to_string(&mut buffer)?;
+
+    Ok(parse_records(buffer, verbose))
+
+}
+
 
 fn main () {
     
