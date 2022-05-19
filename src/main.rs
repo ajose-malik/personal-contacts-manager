@@ -1,5 +1,9 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::fs::File;
+use std::io::{Read, Write};
 use thiserror::Error;
+use structopt::StructOpt;
 
 #[derive(Debug)]
 struct Record {
@@ -15,24 +19,43 @@ struct Records {
 
 impl Records {
     fn new() -> Self {
-      self { 
+      Self { 
           inner: HashMap::new(),
         }
     }
 
     fn add(&mut self, record: Record) {
-        self.inner.insert(record.id, record)
+        self.inner.insert(record.id, record);
     }
 }
 
 #[derive(Error, Debug)]
-enum ParserError {
+enum ParseError {
     #[error("id must be a number: {0}")]
-    InvalidId(#[from] std::num::ParseIntError)
+    InvalidId(#[from] std::num::ParseIntError),
     #[error("empty record")]
-    Emptyrecord,
+    EmptyRecord,
     #[error("missing field: {0}")]
     MissingField(String)
+}
+
+fn parse_record (record: &str) -> Result<Record, ParseError> {
+let fields: Vec<&str> = record.split(',').collect();
+let id = match fields.get(0) {
+    Some(id) => i64::from_str_radix(id, 10)?,
+    None => return Err(ParseError::EmptyRecord),
+};
+
+let name = match fields.get(1).filter(|name| **name != "") {
+    Some(name) => name.to_string(),
+    None => return Err(ParseError::MissingField("name".to_owned()))
+};
+
+let email = fields.get(2)
+.map(|email| email.to_string())
+.filter(|email| email != "");
+
+Ok(Record{id, name, email})
 }
 
 fn parse_records(records: String, verbose: bool) -> Records {
@@ -48,7 +71,7 @@ fn parse_records(records: String, verbose: bool) -> Records {
                             num + 1,
                             e,
                             record
-                        )
+                        );
                     }
                 }
             }
@@ -56,7 +79,7 @@ fn parse_records(records: String, verbose: bool) -> Records {
     }
 }
 
-fn load_records(file_name: PathBuf, verbose; bool) -> std::io::Result<Records> {
+fn load_records(file_name: PathBuf, verbose: bool) -> std::io::Result<Records> {
     let mut file = File::open(file_name)?;
 
     let mut buffer = String::new();
