@@ -33,6 +33,15 @@ impl Records {
         records.sort_by_key(|rec| rec.id);
         records
     }
+
+    fn next_id(&self) -> i64 {
+        let mut ids: Vec<_> = self.inner.keys().collect();
+        ids.sort();
+        match ids.pop() {
+            Some(id) => id + 1,
+            None => 1,
+        }
+    }
 }
 
 #[derive(Error, Debug)]
