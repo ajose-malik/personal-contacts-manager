@@ -106,11 +106,23 @@ enum Command {
     List{}
 }
 
+fn run(opt: Opt) -> Result<(), std::io::Error> {
+    match opt.cmd {
+        Command::List {..} => {
+            let recs = load_records(opt.data_file, opt.verbose)?;
+            for record in recs.into_vec() {
+                println!("{:?}", record);
+            }
+        }
+    }
+    Ok(())
+}
+
 fn main () {
     let opt = Opt::from_args();
     if let Err(e) = run(opt) {
         println!("an error occurred: {}", e);
     }
 
-    
+
 }
