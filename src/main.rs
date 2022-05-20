@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use thiserror::Error;
+use std::path::PathBuf;
 use structopt::StructOpt;
+use thiserror::Error;
 
 #[derive(Debug)]
 struct Record {
@@ -19,8 +19,8 @@ struct Records {
 
 impl Records {
     fn new() -> Self {
-      Self { 
-          inner: HashMap::new(),
+        Self {
+            inner: HashMap::new(),
         }
     }
 
@@ -45,7 +45,10 @@ impl Records {
 }
 
 fn save_records(file_name: PathBuf, records: Records) -> std::io::Result<()> {
-    let mut file = OpenOptions::new().write(true).truncate(true).open(file_name)?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(file_name)?;
 
     file.write(b"id, name, email\n")?;
 
@@ -69,26 +72,27 @@ enum ParseError {
     #[error("empty record")]
     EmptyRecord,
     #[error("missing field: {0}")]
-    MissingField(String)
+    MissingField(String),
 }
 
-fn parse_record (record: &str) -> Result<Record, ParseError> {
-let fields: Vec<&str> = record.split(',').collect();
-let id = match fields.get(0) {
-    Some(id) => i64::from_str_radix(id, 10)?,
-    None => return Err(ParseError::EmptyRecord),
-};
+fn parse_record(record: &str) -> Result<Record, ParseError> {
+    let fields: Vec<&str> = record.split(',').collect();
+    let id = match fields.get(0) {
+        Some(id) => i64::from_str_radix(id, 10)?,
+        None => return Err(ParseError::EmptyRecord),
+    };
 
-let name = match fields.get(1).filter(|name| **name != "") {
-    Some(name) => name.to_string(),
-    None => return Err(ParseError::MissingField("name".to_owned()))
-};
+    let name = match fields.get(1).filter(|name| **name != "") {
+        Some(name) => name.to_string(),
+        None => return Err(ParseError::MissingField("name".to_owned())),
+    };
 
-let email = fields.get(2)
-.map(|email| email.to_string())
-.filter(|email| email != "");
+    let email = fields
+        .get(2)
+        .map(|email| email.to_string())
+        .filter(|email| email != "");
 
-Ok(Record{id, name, email})
+    Ok(Record { id, name, email })
 }
 
 fn parse_records(records: String, verbose: bool) -> Records {
@@ -120,7 +124,6 @@ fn load_records(file_name: PathBuf, verbose: bool) -> std::io::Result<Records> {
     file.read_to_string(&mut buffer)?;
 
     Ok(parse_records(buffer, verbose))
-
 }
 
 #[derive(StructOpt, Debug)]
@@ -141,19 +144,23 @@ enum Command {
         #[structopt(short)]
         email: Option<String>,
     },
-    List{},
+    List {},
 }
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {
     match opt.cmd {
-        Command::Add {name, email} => {
+        Command::Add { name, email } => {
             let mut recs = load_records(opt.data_file.clone(), opt.verbose)?;
             let next_id = recs.next_id();
-            recs.add(Record { id: next_id, name, email });
+            recs.add(Record {
+                id: next_id,
+                name,
+                email,
+            });
             save_records(opt.data_file, recs)?;
         }
 
-        Command::List {..} => {
+        Command::List { .. } => {
             let recs = load_records(opt.data_file, opt.verbose)?;
             for record in recs.into_vec() {
                 println!("{:?}", record);
@@ -163,7 +170,7 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn main () {
+fn main() {
     let opt = Opt::from_args();
     if let Err(e) = run(opt) {
         println!("an error occurred: {}", e);
