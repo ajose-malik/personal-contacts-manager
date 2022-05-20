@@ -77,6 +77,7 @@ fn parse_records(records: String, verbose: bool) -> Records {
             }
         }
     }
+    recs
 }
 
 fn load_records(file_name: PathBuf, verbose: bool) -> std::io::Result<Records> {
@@ -89,7 +90,27 @@ fn load_records(file_name: PathBuf, verbose: bool) -> std::io::Result<Records> {
 
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(about = "contact manager")]
+struct Opt {
+    #[structopt(short, parse(from_os_str), default_value = "data.csv")]
+    data_file: PathBuf,
+    #[structopt(subcommand)]
+    cmd: Command,
+    #[structopt(short, help = "verbose")]
+    verbose: bool,
+}
+
+#[derive(StructOpt, Debug)]
+enum Command {
+    List{}
+}
 
 fn main () {
+    let opt = Opt::from_args();
+    if let Err(e) = run(opt) {
+        println!("an error occurred: {}", e);
+    }
+
     
 }
