@@ -27,6 +27,12 @@ impl Records {
     fn add(&mut self, record: Record) {
         self.inner.insert(record.id, record);
     }
+
+    fn into_vec(mut self) -> Vec<Record> {
+        let mut records: Vec<_> = self.inner.drain().map(|kv| kv.1).collect();
+        records.sort_by_key(|rec| rec.id);
+        records
+    }
 }
 
 #[derive(Error, Debug)]
@@ -123,6 +129,4 @@ fn main () {
     if let Err(e) = run(opt) {
         println!("an error occurred: {}", e);
     }
-
-
 }
