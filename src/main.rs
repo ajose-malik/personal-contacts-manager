@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use thiserror::Error;
 use structopt::StructOpt;
@@ -42,6 +42,24 @@ impl Records {
             None => 1,
         }
     }
+}
+
+fn save_records(file_name: Pathbuf, records: Records) -> std::io::Result<()> {
+    let mut file = OpenOptions::new().write(true).truncate(true).open(file_name)?;
+
+    file.write(b"id, name, email\n")?;
+
+    for record in records.into_vec().into_iter() {
+        let email = match record.email {
+            Some(email) => email,
+            None => "".to_string(),
+        };
+
+        let line = format!("{},{},{}\n", record.id, record.name, email);
+        file.write(line.as_bytes())?;
+    }
+    file.flush()?;
+    Ok(())
 }
 
 #[derive(Error, Debug)]
