@@ -44,7 +44,7 @@ impl Records {
     }
 }
 
-fn save_records(file_name: Pathbuf, records: Records) -> std::io::Result<()> {
+fn save_records(file_name: PathBuf, records: Records) -> std::io::Result<()> {
     let mut file = OpenOptions::new().write(true).truncate(true).open(file_name)?;
 
     file.write(b"id, name, email\n")?;
@@ -136,11 +136,23 @@ struct Opt {
 
 #[derive(StructOpt, Debug)]
 enum Command {
-    List{}
+    Add {
+        name: String,
+        #[structopt(short)]
+        email: Option<String>,
+    },
+    List{},
 }
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {
     match opt.cmd {
+        Command::Add {name, email} => {
+            let mut recs = load_records(opt.data_file.clone(), opt.verbose)?;
+            let next_id = recs.next_id();
+            recs.add(Record { id: next_id, name, email });
+            save_records(opt.data_file, recs)?;
+        }
+
         Command::List {..} => {
             let recs = load_records(opt.data_file, opt.verbose)?;
             for record in recs.into_vec() {
