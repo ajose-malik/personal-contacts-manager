@@ -42,6 +42,13 @@ impl Records {
             None => 1,
         }
     }
+
+    fn search(&self, name: &str) -> Vec<&Record> {
+        self.inner.values()
+            .filter(|rec| rec.name.to_lowercase()
+            .contains(&name.to_lowercase()))
+            .collect()
+    }
 }
 
 fn save_records(file_name: PathBuf, records: Records) -> std::io::Result<()> {
@@ -145,6 +152,9 @@ enum Command {
         email: Option<String>,
     },
     List {},
+    Search {
+        query: String,
+    }
 }
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {
@@ -164,6 +174,18 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
             let recs = load_records(opt.data_file, opt.verbose)?;
             for record in recs.into_vec() {
                 println!("{:?}", record);
+            }
+        }
+
+        Command::Search {query} => {
+            let recs = load_records(opt.data_file, opt.verbose)?;
+            let results = recs.search(&query);
+            if results.is_empty() {
+                println!("no records found");
+            } else {
+                for rec in results {
+                    println!("{:?}", rec);
+                }
             }
         }
     }
