@@ -28,6 +28,17 @@ impl Records {
         self.inner.insert(record.id, record);
     }
 
+    fn edit(&mut self, id: i64, name: &str, email: Option<String>) {
+        self.inner.insert(
+            id,
+            Record { 
+                id, 
+                name: name.to_string(), 
+                email 
+            }
+        );
+    }
+
     fn into_vec(mut self) -> Vec<Record> {
         let mut records: Vec<_> = self.inner.drain().map(|kv| kv.1).collect();
         records.sort_by_key(|rec| rec.id);
@@ -155,6 +166,12 @@ enum Command {
         #[structopt(short)]
         email: Option<String>,
     },
+    Edit {
+        id: i64,
+        name: String,
+        #[structopt(short)]
+        email: Option<String>,
+    },
     List {},
     Search {
         query: String,
@@ -174,6 +191,12 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
                 name,
                 email,
             });
+            save_records(opt.data_file, recs)?;
+        }
+
+        Command::Edit { id, name, email } => {
+            let mut recs = load_records(opt.data_file.clone(), opt.verbose)?;
+            recs.edit(id, &name, email);
             save_records(opt.data_file, recs)?;
         }
 
