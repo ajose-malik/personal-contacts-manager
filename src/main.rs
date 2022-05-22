@@ -49,6 +49,10 @@ impl Records {
             .contains(&name.to_lowercase()))
             .collect()
     }
+
+    fn remove(&mut self, id: i64) -> Option<Record> {
+        self.inner.remove(&id)
+    }
 }
 
 fn save_records(file_name: PathBuf, records: Records) -> std::io::Result<()> {
@@ -154,6 +158,9 @@ enum Command {
     List {},
     Search {
         query: String,
+    },
+    Remove {
+        id: i64,
     }
 }
 
@@ -186,6 +193,16 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
                 for rec in results {
                     println!("{:?}", rec);
                 }
+            }
+        }
+
+        Command::Remove {id} => {
+            let mut recs = load_records(opt.data_file.clone(), opt.verbose)?;
+            if recs.remove(id).is_some() {
+                save_records(opt.data_file, recs)?;
+                println!("record deleted");
+            } else {
+                println!("record not found")
             }
         }
     }
